@@ -129,3 +129,103 @@ def show_phone(args, book):
     name = args[0]
     record = book.find(name)
     if record is None:
+        return "Contact not found."
+    return ", ".join(str(phone) for phone in record.phones)
+
+# Function to show all contacts
+@input_error
+def show_all(args, book):
+    return "\n".join(str(record) for record in book.data.values())
+
+# Function to add a birthday to a contact
+@input_error
+def add_birthday(args, book):
+    name, birthday = args
+    record = book.find(name)
+    if record is None:
+        return "Contact not found."
+    record.add_birthday(birthday)
+    return "Birthday added."
+
+# Function to show a contact's birthday
+@input_error
+def show_birthday(args, book):
+    name = args[0]
+    record = book.find(name)
+    if record is None:
+        return "Contact not found."
+    if record.birthday is None:
+        return f"{name} has no birthday set."
+    return f"{name}'s birthday: {record.birthday.value.strftime('%d.%m.%Y')}"
+
+# Function to show upcoming birthdays
+@input_error
+def birthdays(args, book):
+    upcoming_birthdays = book.get_upcoming_birthdays()
+    if not upcoming_birthdays:
+        return "No upcoming birthdays."
+    return "\n".join(f"{record.name.value}'s birthday is on {record.birthday.value.strftime('%d.%m.%Y')}" for record in upcoming_birthdays)
+
+# Helper function to parse user input
+def parse_input(user_input):
+    return user_input.split()
+
+# Function to save the address book to a file
+def save_data(book, filename="addressbook.pkl"):
+    with open(filename, "wb") as f:
+        pickle.dump(book, f)
+
+# Function to load the address book from a file
+def load_data(filename="addressbook.pkl"):
+    try:
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return AddressBook()
+
+# Main function to handle user commands
+def main():
+    # Load the address book from file or create a new one if file doesn't exist
+    book = load_data()
+
+    print("Welcome to the assistant bot!")
+    while True:
+        user_input = input("Enter a command: ")
+        command, *args = parse_input(user_input)
+
+        if command in ["close", "exit"]:
+            print("Good bye!")
+            save_data(book)
+            break
+
+        elif command == "hello":
+            print("How can I help you?")
+
+        elif command == "add":
+            print(add_contact(args, book))
+
+        elif command == "change":
+            print(change_phone(args, book))
+
+        elif command == "phone":
+            print(show_phone(args, book))
+
+        elif command == "all":
+            print(show_all(args, book))
+
+        elif command == "add-birthday":
+            print(add_birthday(args, book))
+
+        elif command == "show-birthday":
+            print(show_birthday(args, book))
+
+        elif command == "birthdays":
+            print(birthdays(args, book))
+
+        else:
+            print("Invalid command.")
+
+    save_data(book)
+
+if __name__ == "__main__":
+    main()
